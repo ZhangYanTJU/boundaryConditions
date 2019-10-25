@@ -1,0 +1,6 @@
+turbulentDFSEMInletFvPatchVectorField.C
+eddy.C
+eddyIO.C
+
+
+LIB = $(FOAM_USER_LIBBIN)/libZYturbulentDFSEMInlet
