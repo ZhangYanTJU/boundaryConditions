@@ -27,7 +27,7 @@ RAS
 
 LES
 {
-    LESModel        dynamicSmagorinsky;//dynamicKEqn;
+    LESModel        Smagorinsky;//dynamicKEqn;
 
     turbulence      on;
 
