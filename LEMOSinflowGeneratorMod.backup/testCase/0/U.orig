@@ -1,0 +1,87 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    inner
+    {
+        value             uniform (8.31 0 0);
+        type              decayingTurbulenceInflowGeneratorMod_ZY;
+        inletShape        1;
+        direction         1;
+        LField            uniform 0.00545;//integral scale = width
+        RField            uniform (0.690561 0 0 0.690561 0 0.690561);//u'=0.831m/s
+        Umean             (8.31 0 0);//OK
+        midRadius         0.009075;//OK
+        width             0.00545;//OK
+        center            (0 0 0);//OK
+    }
+    outer
+    {
+        value           uniform (18.7 0 0);
+        type              decayingTurbulenceInflowGeneratorMod_ZY;
+        inletShape        1;
+        direction         1;
+        LField            uniform 0.0047;//integral scale = width
+        RField            uniform (3.4969 0 0 3.4969 0 3.4969);//u'=1.87m/s
+        Umean             (18.7 0 0);//OK
+        midRadius         0.01505;//OK
+        width             0.0047;//OK
+        center            (0 0 0);//OK
+    }
+    coflow
+    {
+        type            fixedValue;
+        value           uniform (0.4 0 0);
+    }
+
+    bluffBody
+    {
+        type            noSlip;
+    }
+
+    outlet
+    {
+        type            pressureInletOutletVelocity;
+        value           $internalField;
+    }
+    airBC
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    center
+    {
+        type            symmetryPlane;
+    }
+    frontAndBack_pos
+    {
+        type            wedge;
+    }
+    frontAndBack_neg
+    {
+        type            wedge;
+    }
+}
+
+
+// ************************************************************************* //

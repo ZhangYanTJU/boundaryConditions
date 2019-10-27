@@ -1,0 +1,55 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  dev                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2;
+    format          ascii;
+    class           dictionary;
+    location        "constant";
+    object          thermophysicalProperties;
+}
+
+thermoType
+{
+    type            hePsiThermo;
+    mixture         reactingMixture;
+    transport       sutherland;
+    thermo          janaf;
+    energy          sensibleEnthalpy;
+    equationOfState perfectGas;
+    specie          specie;
+}
+
+inertSpecie     N2;
+
+//chemistryReader foamChemistryReader;
+
+foamChemistryFile "$FOAM_CASE/chemkin/reactions";
+
+foamChemistryThermoFile "$FOAM_CASE/chemkin/thermo.compressibleGas";
+
+//CHEMKINFile     "$FOAM_CASE/chemkin/chem_single.inp";
+CHEMKINFile     "$FOAM_CASE/chemkin/chem.inp";
+
+CHEMKINThermoFile "$FOAM_CASE/chemkin/therm.dat";
+
+CHEMKINTransportFile "$FOAM_CASE/chemkin/transportProperties";
+
+fuel            CH4;
+
+liquids
+{
+    H2O             ;
+}
+
+solids
+{
+}
+
+
+// ************************************************************************* //

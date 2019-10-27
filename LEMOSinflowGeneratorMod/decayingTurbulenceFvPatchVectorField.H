@@ -73,25 +73,33 @@ class decayingTurbulenceFvPatchVectorField : public fixedValueFvPatchField<vecto
 {
 private:
 
-    Field<scalar>          LField_;
-    Field<vector>          refField_;
-    Field<symmTensor>      RField_;
-    label                  curTimeIndex_;
+    Field<scalar> LField_;
+    Field<vector> refField_;
+    Field<symmTensor> RField_;
+    label curTimeIndex_;
     SLList<decayingVorton> vortons_;
-    Field<tensor>          Lund_;
-    Field<symmTensor>      R_;
-    label                  ind_;
-    label                  direction_;
-    Field<scalar>          nVortField_; //debug field, counts number of vortons
+    Field<tensor> Lund_;
+    Field<symmTensor> R_;
+    label ind_;
+    label direction_;
+    Field<scalar> nVortField_; //debug field, counts number of vortons
+    label inletShape_;
+
+    vector Umean_;
+    scalar width_;
+    scalar midRadius_;
+    point center_;
+
+    scalar Radius_;
 
     //- 2D interpolation
-    autoPtr<pointToPointPlanarInterpolation> mapperPtr_;
+    //autoPtr<pointToPointPlanarInterpolation> mapperPtr_;
     //- Fraction of perturbation (fraction of bounding box) to add
     scalar perturb_;
 
 public:
 
-    TypeName("decayingTurbulenceInflowGeneratorMod");
+    TypeName("decayingTurbulenceInflowGeneratorMod_ZY");
 
     decayingTurbulenceFvPatchVectorField
     (

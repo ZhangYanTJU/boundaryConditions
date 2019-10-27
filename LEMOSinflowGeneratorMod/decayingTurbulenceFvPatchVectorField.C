@@ -31,8 +31,9 @@ License
 #include "PstreamReduceOps.H"
 #include "OFstream.H"
 #include "IFstream.H"
-
 #include <ctime>
+#include "collatedFileOperation.H"
+#include "uncollatedFileOperation.H"
 
 Foam::Random ranGen(Foam::label(time(0)));
 
@@ -53,21 +54,24 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
 )
 :
     fixedValueFvPatchField<vector>(p, iF),
-    LField_      (p.size()),
-    refField_    (p.size()),
-    RField_      (p.size()),
+    LField_(p.size()),
+    refField_(p.size()),
+    RField_(p.size()),
     curTimeIndex_(-1),
-    vortons_     (),
-    Lund_        (),
-    R_           (),
-    ind_         (2),
-    direction_   (1),
-    mapperPtr_(NULL),
+    vortons_(),
+    Lund_(),
+    R_(),
+    ind_(2),
+    direction_(1),
     perturb_(0),
-    nVortField_(p.size())
-{
-    //Info << "NULL constructor " << this->dimensionedInternalField().name() << endl;
-}
+    nVortField_(p.size()),
+    inletShape_(1),
+    Umean_(0,0,0),
+    width_(0),
+    midRadius_(0),
+    center_(0,0,0),
+    Radius_(0)
+{}
 
 Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
 (
@@ -78,23 +82,24 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
 )
 :
     fixedValueFvPatchField<vector>(ptf, p, iF, mapper),
-    LField_      (ptf.LField_, mapper),
-    refField_    (ptf.refField_, mapper),
-    RField_      (ptf.RField_, mapper),
+    LField_(mapper(ptf.LField_)),
+    refField_(mapper(ptf.refField_)),
+    RField_(mapper(ptf.RField_)),
     curTimeIndex_(-1),
-    vortons_     (ptf.vortons_),
-    Lund_        (ptf.Lund_, mapper),
-    R_           (ptf.R_, mapper),
-    ind_         (ptf.ind_),
-    direction_   (ptf.direction_),
-    mapperPtr_(NULL),
+    vortons_(ptf.vortons_),
+    Lund_(mapper(ptf.Lund_)),
+    R_(mapper(ptf.R_)),
+    ind_(ptf.ind_),
+    direction_(ptf.direction_),
     perturb_(ptf.perturb_),
-    nVortField_  (ptf.nVortField_, mapper)
-{
-
-    //Info << "mapper constructor " << this->dimensionedInternalField().name() << endl;
-    //Info << "mapper constructor (no field info)"<< endl;
-}
+    nVortField_(mapper(ptf.nVortField_)),
+    inletShape_(ptf.inletShape_),
+    Umean_(ptf.Umean_),
+    width_(ptf.width_),
+    midRadius_(ptf.midRadius_),
+    center_(ptf.center_),
+    Radius_(ptf.Radius_)
+{}
 
 Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
 (
@@ -104,25 +109,39 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
 )
 :
     fixedValueFvPatchField<vector>(p, iF),
-    LField_      (p.size(),pTraits<scalar>::zero),
-    refField_    (p.size(),pTraits<vector>::zero),
-    RField_      (p.size(),pTraits<symmTensor>::zero),
+    LField_("LField", dict, p.size()),
+    refField_(p.size(),pTraits<vector>::zero),
+    RField_("RField", dict, p.size()),
     curTimeIndex_(-1),
-    Lund_        (p.size(), pTraits<tensor>::zero),
-    R_           (p.size(), pTraits<symmTensor>::zero),
-    ind_         (2),
-    direction_   (readScalar(dict.lookup("direction"))),
-    mapperPtr_(NULL),
+    Lund_(p.size(), pTraits<tensor>::zero),
+    R_(RField_),
+    ind_(2),
+    direction_(dict.lookupOrDefault("direction", label(1))),
     perturb_(dict.lookupOrDefault("perturb", 1e-5)),
-    nVortField_  (p.size(),pTraits<scalar>::zero)
+    nVortField_(p.size(),pTraits<scalar>::zero),
+    inletShape_(dict.lookupOrDefault("inletShape", label(1))),
+    Umean_(0,0,0),
+    width_(0),
+    midRadius_(0),
+    center_(0,0,0),
+    Radius_(0)
 {
-    //Info << "dict constructor " << this->dimensionedInternalField().name() << endl;
-    if (dict.found("vortons"))
-        vortons_ = SLList<decayingVorton>(dict.lookup("vortons"));
-
+    Info << "dict constructor for " << patch().name() << endl;
+    /*
     if (Pstream::master())
     {
-        fileName inputFile(db().time().path()/db().time().timeName()/+"vortons_");
+        fileName inputFile;
+
+        const fileOperation& fp = Foam::fileHandler();
+        if (isA<Foam::fileOperations::collatedFileOperation>(fp))
+        {
+            inputFile = db().time().rootPath()/db().time().globalCaseName()/"processors"+Foam::name(Pstream::nProcs())/db().time().timeName()/+"vortons_"+patch().name();
+        }
+        else if (isA<Foam::fileOperations::uncollatedFileOperation>(fp))
+        {
+            inputFile = db().time().path()/db().time().timeName()/+"vortons_"+patch().name();
+        }
+
         IFstream os2(inputFile);
 
         if (os2.opened())
@@ -131,19 +150,51 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
             os2.read(name);
             if (name=="vortons")
             {
-                Info << "found vortons file: "<<name << endl;
+                Info << "found vortons file: "<<name<< endl;
                 os2 >> vortons_;
             }
         }
+
+        Info << "vortons_.size()===" << vortons_.size() << endl;
     }
+    */
 
-    //Fills  LField_, refField_, RField_
-    readInletData();
+    // 3. read in the boundary part of U
+    if (dict.found("vortons"))
+        vortons_ = SLList<decayingVorton>(dict.lookup("vortons"));
+    
+    Info << "vortons_.size()===" << vortons_.size() << endl;
 
-    // debug: write the interpolated source field if required.
-    if (dict.lookupOrDefault("writeSourceFields",false)==true)
+
+    const vectorField& Cf = patch().Cf();
+
+    if (inletShape_==1)
     {
-        writeSourceFields();
+        Umean_ = dict.lookup("Umean");
+        width_ = readScalar(dict.lookup("width"));
+        midRadius_ = readScalar(dict.lookup("midRadius"));
+        center_ = dict.lookup("center");
+
+        scalar delta_ = width_/2;
+
+        Info<<"width_======"<<width_<<endl;
+        Info<<"delta_======"<<delta_<<endl;
+
+        refField_ = 1.218*Umean_*pow( 1. - mag(mag(Cf - center_) - midRadius_)/1.01/delta_, 1./7.);//for ring
+    }
+    else if (inletShape_==2)
+    {
+        Umean_ = dict.lookup("Umean");
+        center_ = dict.lookup("center");
+        Radius_ = readScalar(dict.lookup("Radius"));
+        vector Umax = Umean_/2./(7./8.-7./15.);
+
+        refField_ = Umax*pow(1. - mag(Cf - center_)/Radius_, 1./7.);
+    }
+    else
+    {
+        FatalErrorInFunction
+            << "You can shoose 'ring', 'tube', instead of inletShape_!" << endl;
     }
 
     R_= RField_;
@@ -237,13 +288,6 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
         Lund_=pTraits<tensor>::I;
     }
 
-    // debug: write the interpolated source field if required.
-    if (dict.lookupOrDefault("writeSourceFields",false)==true)
-    {
-        fileName rootPath(this->db().time().constant()/"boundaryData"/this->patch().name());
-        OFstream(rootPath/"LundPatch")() << Lund_;
-    }
-
     if (dict.found("ind"))
         ind_ = readScalar(dict.lookup("ind"));
 
@@ -267,20 +311,23 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
 )
 :
     fixedValueFvPatchField<vector>(ptf),
-    LField_      (ptf.LField_),
-    refField_    (ptf.refField_),
-    RField_      (ptf.RField_),
+    LField_(ptf.LField_),
+    refField_(ptf.refField_),
+    RField_(ptf.RField_),
     curTimeIndex_(-1),
-    vortons_     (ptf.vortons_),
-    Lund_        (ptf.Lund_),
-    R_           (ptf.R_),
-    ind_         (ptf.ind_),
-    direction_   (ptf.direction_),
-    mapperPtr_(NULL),
+    vortons_(ptf.vortons_),
+    Lund_(ptf.Lund_),
+    R_(ptf.R_),
+    ind_(ptf.ind_),
+    direction_(ptf.direction_),
     perturb_(ptf.perturb_),
-    nVortField_  (ptf.nVortField_)
+    nVortField_(ptf.nVortField_),
+    inletShape_(ptf.inletShape_),
+    Umean_(ptf.Umean_),
+    width_(ptf.width_),
+    midRadius_(ptf.midRadius_),
+    center_(ptf.center_)
 {
-    //Info << "ptf constructor " << this->dimensionedInternalField().name() << endl;
 }
 
 Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
@@ -290,43 +337,37 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
 )
 :
     fixedValueFvPatchField<vector>(ptf, iF),
-    LField_      (ptf.LField_),
-    refField_    (ptf.refField_),
-    RField_      (ptf.RField_),
+    LField_(ptf.LField_),
+    refField_(ptf.refField_),
+    RField_(ptf.RField_),
     curTimeIndex_(-1),
-    vortons_     (ptf.vortons_),
-    Lund_        (ptf.Lund_),
-    R_           (ptf.R_),
-    ind_         (ptf.ind_),
-    direction_   (ptf.direction_),
-    mapperPtr_(NULL),
+    vortons_(ptf.vortons_),
+    Lund_(ptf.Lund_),
+    R_(ptf.R_),
+    ind_(ptf.ind_),
+    direction_(ptf.direction_),
     perturb_(ptf.perturb_),
-    nVortField_  (ptf.nVortField_)
+    nVortField_(ptf.nVortField_),
+    inletShape_(ptf.inletShape_),
+    Umean_(ptf.Umean_),
+    width_(ptf.width_),
+    midRadius_(ptf.midRadius_),
+    center_(ptf.center_)
 {
-
-    //Info << "ptf,If constructor " << this->dimensionedInternalField().name() << endl;
 }
 
 void Foam::decayingTurbulenceFvPatchVectorField::autoMap(const fvPatchFieldMapper& m)
 {
-    //Info << "autoMap " << this->dimensionedInternalField().name() << endl;
-
-    Field<vector>::autoMap(m);
-    LField_.autoMap(m);
-    refField_.autoMap(m);
-    RField_.autoMap(m);
-    R_.autoMap(m);
-    nVortField_.autoMap(m);
-
-    // Clear interpolator
-    mapperPtr_.clear();
-
+    fixedValueFvPatchField<vector>::autoMap(m);
+    m(LField_, LField_);
+    m(refField_, refField_);
+    m(RField_, RField_);
+    m(R_, R_);
+    m(nVortField_, nVortField_);
 }
 
 void Foam::decayingTurbulenceFvPatchVectorField::rmap(const fvPatchField<vector>& ptf, const labelList& addr)
 {
-    //Info << "rmap " << this->dimensionedInternalField().name() << endl;
-    //Info << "rmap " << endl;
     fixedValueFvPatchField<vector>::rmap(ptf, addr);
 
     const decayingTurbulenceFvPatchVectorField& tiptf = refCast<const decayingTurbulenceFvPatchVectorField>(ptf);
@@ -336,19 +377,12 @@ void Foam::decayingTurbulenceFvPatchVectorField::rmap(const fvPatchField<vector>
     RField_.rmap(tiptf.RField_, addr);
     R_.rmap(tiptf.R_, addr);
     nVortField_.rmap(tiptf.nVortField_, addr);
-
-
-    // Clear interpolator
-    mapperPtr_.clear();
-
 }
 
 
 void Foam::decayingTurbulenceFvPatchVectorField::updateCoeffs()
 {
-    if (this->updated())
-        return;
-
+    if (this->updated()) return;
 
     if (curTimeIndex_ != this->db().time().timeIndex())
     {
@@ -361,116 +395,10 @@ void Foam::decayingTurbulenceFvPatchVectorField::updateCoeffs()
 
 void Foam::decayingTurbulenceFvPatchVectorField::readInletData()
 {
-    // Initialise
-    if (mapperPtr_.empty())
-    {
-        pointIOField samplePoints
-        (
-            IOobject
-            (
-                "points",
-                this->db().time().constant(),
-                "boundaryData"/this->patch().name(),
-                this->db(),
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE,
-                false
-            )
-        );
-
-        // Allocate the interpolator
-        mapperPtr_.reset
-        (
-            new pointToPointPlanarInterpolation
-            (
-                samplePoints,
-                 this->patch().patch().faceCentres(),
-                perturb_
-            )
-        );
-
-        // Reread values and interpolate
-        vectorIOField ref_
-        (
-            IOobject
-            (
-                "ref",
-                this->db().time().constant(),
-                "boundaryData"
-               /this->patch().name(),
-                this->db(),
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE,
-                false
-            )
-        );
-
-        // Reread values and interpolate
-        IOField<scalar> L_
-        (
-            IOobject
-            (
-                "L",
-                this->db().time().constant(),
-                "boundaryData"
-               /this->patch().name(),
-                this->db(),
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE,
-                false
-            )
-        );
-
-        // Reread values and interpolate
-        IOField<symmTensor> Rs_
-        (
-            IOobject
-            (
-                "R",
-                this->db().time().constant(),
-                "boundaryData"
-               /this->patch().name(),
-                this->db(),
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE,
-                false
-            )
-        );
-
-        LField_ = mapperPtr_().interpolate(L_);
-        refField_ = mapperPtr_().interpolate(ref_);
-        RField_ = mapperPtr_().interpolate(Rs_);
-
-    }
 }
 
 void Foam::decayingTurbulenceFvPatchVectorField::writeSourceFields()
 {
-    // example to save data in files with header (not used)
-//    IOField<symmTensor> IORField
-//    (
-//        IOobject
-//        (
-//            "RPatch_withHeader",
-//            this->db().time().constant(),
-//            "boundaryData"
-//           /this->patch().name(),
-//            this->db(),
-//            IOobject::NO_READ,
-//            IOobject::NO_WRITE,
-//            false
-//        ),
-//        RField_
-//    );
-//    IORField.write();
-
-    // save data in files without header
-    fileName rootPath(this->db().time().constant()/"boundaryData"/this->patch().name());
-
-    OFstream(rootPath/"pointsPatch")() << this->patch().Cf();
-    OFstream(rootPath/"RPatch")() << RField_;
-    OFstream(rootPath/"LPatch")() << LField_;
-    OFstream(rootPath/"refPatch")() << refField_;
 }
 
 void Foam::decayingTurbulenceFvPatchVectorField::doUpdate()
@@ -625,24 +553,24 @@ void Foam::decayingTurbulenceFvPatchVectorField::doUpdate()
             modified=false;
             for (SLList<decayingVorton>::iterator it = vortons_.begin(); it!=vortons_.end(); ++it)
             {
-            if (direction_ > 0)
-        {
-                    if (it().location().x() > it().xmax())
+                if (direction_ > 0)
                     {
-                        vortons_.remove(it);
-                        modified=true;
-                        break;
+                        if (it().location().x() > it().xmax())
+                        {
+                            vortons_.remove(it);
+                            modified=true;
+                            break;
+                        }
                     }
-        }
-        else
-        {
-                    if (it().location().x() < it().xmax())
+                    else
                     {
-                        vortons_.remove(it);
-                        modified=true;
-                        break;
+                        if (it().location().x() < it().xmax())
+                        {
+                            vortons_.remove(it);
+                            modified=true;
+                            break;
+                        }
                     }
-        }
             }
         } while (modified);
 
@@ -653,30 +581,51 @@ void Foam::decayingTurbulenceFvPatchVectorField::doUpdate()
 void Foam::decayingTurbulenceFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchField<vector>::write(os);
-    //LField_.writeEntry("LField", os);
-    //refField_.writeEntry("refField", os);
-    //RField_.writeEntry("RField", os);
+    writeEntry(os, "LField", LField_);
+    writeEntry(os, "refField", refField_);
+    writeEntry(os, "RField", RField_);
     os.writeKeyword("direction")<<direction_<<token::END_STATEMENT<<nl;
-    this->writeEntry("value", os);
-    R_.writeEntry("R", os);
+    if (inletShape_==1)
+    {
+        os.writeKeyword("Umean")<<Umean_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("width")<<width_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("midRadius")<<midRadius_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;
+    }
+    else if (inletShape_==2)
+    {
+        os.writeKeyword("Umean")<<Umean_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("Radius")<<Radius_<<token::END_STATEMENT<<nl;
+    }
+    else
+    {
+        FatalErrorInFunction
+            << "You can shoose 'ring', 'tube', instead of inletShape_!" << endl;
+    }
+    writeEntry(os, "value", *this);
+    writeEntry(os, "R", R_);
     os.writeKeyword("ind")<<ind_<<token::END_STATEMENT<<nl;
 
-    if (Pstream::master())
+    /*if (Pstream::master())
     {
-        fileName outputFile(db().time().path()/db().time().timeName()/+"vortons_");
-        OFstream os2(outputFile);
-        os2.writeKeyword("vortons")<<vortons_<<token::END_STATEMENT<<nl;
-
-        if(debug)
+        fileName outputFile;
+        const fileOperation& fp = Foam::fileHandler();
+        if (isA<Foam::fileOperations::collatedFileOperation>(fp))
         {
-            fileName rootPath(this->db().time().timePath());
-            OFstream(rootPath/"nVortField")() << nVortField_;
-
+            outputFile=db().time().rootPath()/db().time().globalCaseName()/"processors"+Foam::name(Pstream::nProcs())/db().time().timeName()/+"vortons_"+patch().name();
         }
-    }
+        else if (isA<Foam::fileOperations::uncollatedFileOperation>(fp))
+        {
+            outputFile = db().time().path()/db().time().timeName()/+"vortons_"+patch().name();
+        }
+            OFstream os2(outputFile);
+            os2.writeKeyword("vortons")<<vortons_<<token::END_STATEMENT<<nl;
+    }*/
 
-    //if (Pstream::master())
-    //   os.writeKeyword("vortons")<<vortons_<<token::END_STATEMENT<<nl;
+    // 3. write in the boundary part of U
+    if (Pstream::master())
+       os.writeKeyword("vortons")<<vortons_<<token::END_STATEMENT<<nl;
 }
 
 
