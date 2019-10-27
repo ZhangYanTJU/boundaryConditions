@@ -127,6 +127,7 @@ Foam::decayingTurbulenceFvPatchVectorField_ZY::decayingTurbulenceFvPatchVectorFi
     Radius_(0)
 {
     Info << "dict constructor for " << patch().name() << endl;
+    /*
     if (Pstream::master())
     {
         fileName inputFile;
@@ -156,10 +157,13 @@ Foam::decayingTurbulenceFvPatchVectorField_ZY::decayingTurbulenceFvPatchVectorFi
 
         Info << "vortons_.size()===" << vortons_.size() << endl;
     }
+    */
 
     // 3. read in the boundary part of U
-    //if (dict.found("vortons"))
-        //vortons_ = SLList<decayingVorton>(dict.lookup("vortons"));
+    if (dict.found("vortons"))
+        vortons_ = SLList<decayingVorton>(dict.lookup("vortons"));
+    
+    Info << "vortons_.size()===" << vortons_.size() << endl;
 
 
     const vectorField& Cf = patch().Cf();
@@ -603,7 +607,7 @@ void Foam::decayingTurbulenceFvPatchVectorField_ZY::write(Ostream& os) const
     writeEntry(os, "R", R_);
     os.writeKeyword("ind")<<ind_<<token::END_STATEMENT<<nl;
 
-    if (Pstream::master())
+    /*if (Pstream::master())
     {
         fileName outputFile;
         const fileOperation& fp = Foam::fileHandler();
@@ -617,11 +621,11 @@ void Foam::decayingTurbulenceFvPatchVectorField_ZY::write(Ostream& os) const
         }
             OFstream os2(outputFile);
             os2.writeKeyword("vortons")<<vortons_<<token::END_STATEMENT<<nl;
-    }
+    }*/
 
     // 3. write in the boundary part of U
-    //if (Pstream::master())
-    //   os.writeKeyword("vortons")<<vortons_<<token::END_STATEMENT<<nl;
+    if (Pstream::master())
+       os.writeKeyword("vortons")<<vortons_<<token::END_STATEMENT<<nl;
 }
 
 
