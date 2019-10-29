@@ -585,6 +585,7 @@ void Foam::decayingTurbulenceFvPatchVectorField::write(Ostream& os) const
     writeEntry(os, "refField", refField_);
     writeEntry(os, "RField", RField_);
     os.writeKeyword("direction")<<direction_<<token::END_STATEMENT<<nl;
+    os.writeKeyword("inletShape")<<inletShape_<<token::END_STATEMENT<<nl;
     if (inletShape_==1)
     {
         os.writeKeyword("Umean")<<Umean_<<token::END_STATEMENT<<nl;
