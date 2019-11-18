@@ -6,9 +6,9 @@ sed -r -i 's/defaultFaces/outlet/g' constant/polyMesh/boundary
 
 
 
-decomposePar -force
-mpirun -np 3 reactingFoam -parallel
+decomposePar -force &>decomposePar.log
+mpirun -np 3 reactingFoam -parallel &>reactingFoam.log
 
 
-decomposePar -force -fileHandler collated
-mpirun -np 3 reactingFoam -parallel -fileHandler collated
+decomposePar -force -fileHandler collated &>decomposePar.collated.log
+mpirun -np 3 reactingFoam -parallel -fileHandler collated &>reactingFoam.collated.log
