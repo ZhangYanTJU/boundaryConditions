@@ -177,7 +177,7 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
         width_ = readScalar(dict.lookup("width"));
         midRadius_ = readScalar(dict.lookup("midRadius"));
         center_ = dict.lookup("center");
-        n_ = dict.lookup("n");
+        n_ = readScalar(dict.lookup("n"));
         scalar delta_ = width_/2;
 
         Info<<"width_======"<<width_<<endl;
@@ -190,7 +190,7 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
         Umean_ = dict.lookup("Umean");
         center_ = dict.lookup("center");
         Radius_ = readScalar(dict.lookup("Radius"));
-        n_ = dict.lookup("n");
+        n_ = readScalar(dict.lookup("n"));
         vector Umax = Umean_/2./(7./8.-7./15.);
 
         refField_ = Umax*pow(1. - mag(Cf - center_)/Radius_, n_);
