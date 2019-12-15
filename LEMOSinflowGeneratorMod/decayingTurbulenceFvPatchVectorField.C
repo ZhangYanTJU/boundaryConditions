@@ -70,7 +70,8 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     width_(0),
     midRadius_(0),
     center_(0,0,0),
-    Radius_(0)
+    Radius_(0),
+    n_(0)
 {}
 
 Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
@@ -98,7 +99,8 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     width_(ptf.width_),
     midRadius_(ptf.midRadius_),
     center_(ptf.center_),
-    Radius_(ptf.Radius_)
+    Radius_(ptf.Radius_),
+    n_(ptf.n_)
 {}
 
 Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
@@ -124,7 +126,8 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     width_(0),
     midRadius_(0),
     center_(0,0,0),
-    Radius_(0)
+    Radius_(0),
+    n_(0)
 {
     Info << "dict constructor for " << patch().name() << endl;
     /*
@@ -174,22 +177,23 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
         width_ = readScalar(dict.lookup("width"));
         midRadius_ = readScalar(dict.lookup("midRadius"));
         center_ = dict.lookup("center");
-
+        n_ = readScalar(dict.lookup("n"));
         scalar delta_ = width_/2;
 
         Info<<"width_======"<<width_<<endl;
         Info<<"delta_======"<<delta_<<endl;
 
-        refField_ = 1.218*Umean_*pow( 1. - mag(mag(Cf - center_) - midRadius_)/1.01/delta_, 1./7.);//for ring
+        refField_ = 1.218*Umean_*pow( 1. - mag(mag(Cf - center_) - midRadius_)/1.01/delta_, n_);//for ring
     }
     else if (inletShape_==2)
     {
         Umean_ = dict.lookup("Umean");
         center_ = dict.lookup("center");
         Radius_ = readScalar(dict.lookup("Radius"));
+        n_ = readScalar(dict.lookup("n"));
         vector Umax = Umean_/2./(7./8.-7./15.);
 
-        refField_ = Umax*pow(1. - mag(Cf - center_)/Radius_, 1./7.);
+        refField_ = Umax*pow(1. - mag(Cf - center_)/Radius_, n_);
     }
     else
     {
@@ -326,7 +330,8 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     Umean_(ptf.Umean_),
     width_(ptf.width_),
     midRadius_(ptf.midRadius_),
-    center_(ptf.center_)
+    center_(ptf.center_),
+    n_(ptf.n_)
 {
 }
 
@@ -352,7 +357,8 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     Umean_(ptf.Umean_),
     width_(ptf.width_),
     midRadius_(ptf.midRadius_),
-    center_(ptf.center_)
+    center_(ptf.center_),
+    n_(ptf.n_)
 {
 }
 
@@ -592,12 +598,14 @@ void Foam::decayingTurbulenceFvPatchVectorField::write(Ostream& os) const
         os.writeKeyword("width")<<width_<<token::END_STATEMENT<<nl;
         os.writeKeyword("midRadius")<<midRadius_<<token::END_STATEMENT<<nl;
         os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("n")<<n_<<token::END_STATEMENT<<nl;
     }
     else if (inletShape_==2)
     {
         os.writeKeyword("Umean")<<Umean_<<token::END_STATEMENT<<nl;
         os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;
         os.writeKeyword("Radius")<<Radius_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("n")<<n_<<token::END_STATEMENT<<nl;
     }
     else
     {
