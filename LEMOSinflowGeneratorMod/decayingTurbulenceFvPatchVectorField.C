@@ -598,12 +598,14 @@ void Foam::decayingTurbulenceFvPatchVectorField::write(Ostream& os) const
         os.writeKeyword("width")<<width_<<token::END_STATEMENT<<nl;
         os.writeKeyword("midRadius")<<midRadius_<<token::END_STATEMENT<<nl;
         os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("n")<<n_<<token::END_STATEMENT<<nl;
     }
     else if (inletShape_==2)
     {
         os.writeKeyword("Umean")<<Umean_<<token::END_STATEMENT<<nl;
         os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;
         os.writeKeyword("Radius")<<Radius_<<token::END_STATEMENT<<nl;
+        os.writeKeyword("n")<<n_<<token::END_STATEMENT<<nl;
     }
     else
     {
