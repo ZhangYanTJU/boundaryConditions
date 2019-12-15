@@ -1,6 +1,4 @@
 EXE_INC = \
- -Werror \
- -Wno-deprecated \
  -I$(LIB_SRC)/dynamicMesh/lnInclude \
  -I$(LIB_SRC)/triSurface/lnInclude \
  -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
