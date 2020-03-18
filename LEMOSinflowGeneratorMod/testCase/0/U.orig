@@ -25,14 +25,16 @@ boundaryField
     {
         value             uniform (8.31 0 0);
         type              decayingTurbulenceInflowGeneratorMod_ZY;
-        inletShape        1;
+        inletShape        1;// 1 circular ring; 2 circular tube; 
         direction         1;
         LField            uniform 0.00545;//integral scale = width
         RField            uniform (0.690561 0 0 0.690561 0 0.690561);//u'=0.831m/s
         Umean             (8.31 0 0);//OK
-        midRadius         0.009075;//OK
-        width             0.00545;//OK
+        midRadius         0.009075;//OK for inletShape 1;
+        Radius            0.009075;//OK for inletShape 2;
+        width             0.00545;//OK for inletShape 1;
         center            (0 0 0);//OK
+        n                 0.1428571429; // 1.0/7.0
     }
     outer
     {
@@ -43,9 +45,11 @@ boundaryField
         LField            uniform 0.0047;//integral scale = width
         RField            uniform (3.4969 0 0 3.4969 0 3.4969);//u'=1.87m/s
         Umean             (18.7 0 0);//OK
-        midRadius         0.01505;//OK
-        width             0.0047;//OK
+        midRadius         0.01505;//OK for inletShape 1;
+        Radius            0.009075;//OK for inletShape 2;
+        width             0.0047;//OK for inletShape 1;
         center            (0 0 0);//OK
+        n                 0.1428571429; // 1.0/7.0
     }
     coflow
     {

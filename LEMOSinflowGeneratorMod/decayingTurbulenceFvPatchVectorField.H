@@ -91,7 +91,7 @@ private:
     point center_;
 
     scalar Radius_;
-
+    scalar n_;
     //- 2D interpolation
     //autoPtr<pointToPointPlanarInterpolation> mapperPtr_;
     //- Fraction of perturbation (fraction of bounding box) to add
