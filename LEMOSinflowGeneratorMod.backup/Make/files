@@ -1,5 +1,0 @@
-decayingVorton.C
-decayingTurbulenceFvPatchVectorField_ZY.C
-
-
-LIB = $(FOAM_USER_LIBBIN)/libZY_LEMOSinflowMod
