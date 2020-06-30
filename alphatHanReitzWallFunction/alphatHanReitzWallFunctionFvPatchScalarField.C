@@ -120,13 +120,13 @@ void alphatWallFunctionFvPatchScalarField::updateCoeffs()
 
     const nutWallFunctionFvPatchScalarField& nutw =
         nutWallFunctionFvPatchScalarField::nutw(turbModel, patchi);
-        
+
     const scalarField& rhow = turbModel.rho().boundaryField()[patchi];
     const tmp<scalarField> tnutw = turbModel.nut(patchi);
 
     // original wall function
     //operator==(rhow*tnutw/Prt_);
-    
+
     // Han Reitz wall function
     scalarField& alphatw = *this;
     const scalarField& y = turbModel.y()[patchi];
@@ -139,25 +139,25 @@ void alphatWallFunctionFvPatchScalarField::updateCoeffs()
     alpha.writeMinMax(Info);
     const scalarField& alphaw = alpha.boundaryField()[patchi];
     //const tmp<scalarField> talphaw = turbModel.alpha(patchi);
-    //const scalarField& alphaw = talphaw();    
+    //const scalarField& alphaw = talphaw();
     const scalar Cmu25 = pow025(nutw.Cmu());
     const volScalarField& T = db().lookupObject<volScalarField> ("T");
     const scalarField& Tw = T.boundaryField()[patchi];
-    scalarField qwByCp(this->size(),pTraits<scalar>::zero); 
-    
+    scalarField qwByCp(this->size(),pTraits<scalar>::zero);
+
     forAll(alphatw, faceI)
     {
         label cellI = patch().faceCells()[faceI];
 
         scalar uTau = Cmu25*sqrt(k[cellI]);
         scalar yPlus = uTau*y[faceI]/(nuw[faceI]);
-            
+
         if (yPlus > nutw.yPlusLam())
         {
             qwByCp[faceI] = rhow[faceI]*uTau*T[cellI]*log(T[cellI]/Tw[faceI])/(2.1*log(yPlus)+2.513);
             alphatw[faceI] = qwByCp[faceI]*y[faceI]/(T[cellI]-Tw[faceI]+SMALL)-alphaw[faceI];
         }
-    }    
+    }
 
     fixedValueFvPatchScalarField::updateCoeffs();
 }

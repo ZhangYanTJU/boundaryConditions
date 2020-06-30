@@ -43,7 +43,7 @@ Foam::ZYturbulentInletFvPatchField::ZYturbulentInletFvPatchField
     Umean_   (0,0,0),
     width_   (0),
     midRadius_   (0),
-    center_   (0,0,1)      
+    center_   (0,0,1)
 {}
 
 
@@ -62,19 +62,19 @@ Foam::ZYturbulentInletFvPatchField::ZYturbulentInletFvPatchField
     Umean_   (0,0,0),
     width_   (0),
     midRadius_   (0),
-    center_   (0,0,1)    
+    center_   (0,0,1)
 {
     Umean_ = dict.lookup("Umean");
     width_ = readScalar(dict.lookup("width"));
     midRadius_ = readScalar(dict.lookup("midRadius"));
     center_ = dict.lookup("center");
-    
+
     scalar delta_ = width_/2;
 
     const vectorField& Cf = this->patch().Cf();
     Info<<"width_======"<<width_<<endl;
     Info<<"delta_======"<<delta_<<endl;
-    
+
     referenceField_ = 1.218*Umean_*pow( 1. - mag(mag(Cf - center_) - midRadius_)/1.01/delta_, 1./7.);
     if (dict.found("value"))
     {
@@ -106,7 +106,7 @@ Foam::ZYturbulentInletFvPatchField::ZYturbulentInletFvPatchField
     Umean_   (ptf.Umean_),
     width_   (ptf.width_),
     midRadius_   (ptf.midRadius_),
-    center_   (ptf.center_)    
+    center_   (ptf.center_)
 {}
 
 
@@ -123,7 +123,7 @@ Foam::ZYturbulentInletFvPatchField::ZYturbulentInletFvPatchField
     Umean_   (ptf.Umean_),
     width_   (ptf.width_),
     midRadius_   (ptf.midRadius_),
-    center_   (ptf.center_)     
+    center_   (ptf.center_)
 {}
 
 
@@ -141,7 +141,7 @@ Foam::ZYturbulentInletFvPatchField::ZYturbulentInletFvPatchField
     Umean_   (ptf.Umean_),
     width_   (ptf.width_),
     midRadius_   (ptf.midRadius_),
-    center_   (ptf.center_)     
+    center_   (ptf.center_)
 {}
 
 
@@ -195,7 +195,7 @@ void Foam::ZYturbulentInletFvPatchField::updateCoeffs()
 
         //patchField = referenceField_+randomField*referenceField_*fluctuationScale_;
         patchField = referenceField_+cmptMultiply(randomField,fluctuationScale_)*mag(referenceField_);
-        
+
         //OF original
         /*
         // Correction-factor to compensate for the loss of RMS fluctuation
@@ -212,9 +212,9 @@ void Foam::ZYturbulentInletFvPatchField::updateCoeffs()
                     randomField - 0.5*pTraits<Type>::one,
                     fluctuationScale_
                 )*mag(referenceField_)
-            );  
-        */            
-        
+            );
+        */
+
         curTimeIndex_ = this->db().time().timeIndex();
     }
 
@@ -233,7 +233,7 @@ void Foam::ZYturbulentInletFvPatchField::write(Ostream& os) const
     os.writeKeyword("Umean")<<Umean_<<token::END_STATEMENT<<nl;
     os.writeKeyword("width")<<width_<<token::END_STATEMENT<<nl;
     os.writeKeyword("midRadius")<<midRadius_<<token::END_STATEMENT<<nl;
-    os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;    
+    os.writeKeyword("center")<<center_<<token::END_STATEMENT<<nl;
 }
 
 

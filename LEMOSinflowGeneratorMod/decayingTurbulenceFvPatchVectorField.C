@@ -165,7 +165,7 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     // 3. read in the boundary part of U
     if (dict.found("vortons"))
         vortons_ = SLList<decayingVorton>(dict.lookup("vortons"));
-    
+
     Info << "vortons_.size()===" << vortons_.size() << endl;
 
 

@@ -108,7 +108,7 @@ Foam::turbulentInletTableFvPatchField<Type>::turbulentInletTableFvPatchField
     alpha_(ptf.alpha_),
     curTimeIndex_(-1),
     UmeanTable_(ptf.UmeanTable_, false)
-{	Info << "333333333333333333333333333333333"<< endl;}
+{    Info << "333333333333333333333333333333333"<< endl;}
 
 
 template<class Type>
@@ -181,9 +181,9 @@ void Foam::turbulentInletTableFvPatchField<Type>::updateCoeffs()
         // due to the temporal correlation introduced by the alpha parameter.
         scalar rmsCorr = sqrt(12*(2*alpha_ - sqr(alpha_)))/alpha_;
 
-		const scalar t = this->db().time().timeOutputValue();
-		scalar amplitude = UmeanTable_->value(t);///UmeanTable_.max();
-		Info << "amplitude is "<< amplitude << endl;
+        const scalar t = this->db().time().timeOutputValue();
+        scalar amplitude = UmeanTable_->value(t);///UmeanTable_.max();
+        Info << "amplitude is "<< amplitude << endl;
 
         patchField = amplitude*
         (
