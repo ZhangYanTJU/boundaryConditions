@@ -187,7 +187,8 @@ Foam::eddy::eddy
     if (found)
     {
         // Shuffle the gamma^2 values
-        rndGen.shuffle(Gamma2);
+        //rndGen.shuffle(Gamma2);
+        shuffle(Gamma2);
     }
     else
     {

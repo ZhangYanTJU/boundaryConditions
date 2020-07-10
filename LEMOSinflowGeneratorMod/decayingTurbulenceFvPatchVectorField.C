@@ -34,6 +34,7 @@ License
 #include <ctime>
 #include "collatedFileOperation.H"
 #include "uncollatedFileOperation.H"
+#include "Random.H"
 
 Foam::Random ranGen(Foam::label(time(0)));
 

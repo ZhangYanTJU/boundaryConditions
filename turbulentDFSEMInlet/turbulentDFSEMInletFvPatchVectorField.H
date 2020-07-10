@@ -115,9 +115,6 @@ class turbulentDFSEMInletFvPatchVectorField
         //- Von Karman constant
         const scalar kappa_;
 
-        //- Global numbering for faces
-        mutable autoPtr<globalIndex> globalFacesPtr_;
-
 
         // Table reading for patch inlet flow properties
 

@@ -736,7 +736,6 @@ turbulentDFSEMInletFvPatchVectorField
     delta_(0),
     d_(0),
     kappa_(0),
-
     perturb_(1e-5),
     mapMethod_("planarInterpolation"),
     mapperPtr_(nullptr),
@@ -747,13 +746,11 @@ turbulentDFSEMInletFvPatchVectorField
     interpolateU_(false),
     U_(),
     UMean_(vector::zero),
-
     patchArea_(-1),
     triFace_(),
     triToFace_(),
     triCumulativeMagSf_(),
     sumTriMagSf_(Pstream::nProcs() + 1, 0.0),
-
     eddies_(0),
     nCellPerEddy_(5),
     patchNormal_(vector::zero),
@@ -782,30 +779,27 @@ turbulentDFSEMInletFvPatchVectorField
     delta_(ptf.delta_),
     d_(ptf.d_),
     kappa_(ptf.kappa_),
-
     perturb_(ptf.perturb_),
     mapMethod_(ptf.mapMethod_),
     mapperPtr_(nullptr),
     interpolateR_(ptf.interpolateR_),
-    R_(ptf.R_, mapper),
+    R_(mapper(ptf.R_)),
     interpolateL_(ptf.interpolateL_),
-    L_(ptf.L_, mapper),
+    L_(mapper(ptf.L_)),
     interpolateU_(ptf.interpolateU_),
-    U_(ptf.U_, mapper),
+    U_(mapper(ptf.U_)),
     UMean_(ptf.UMean_),
-
     patchArea_(ptf.patchArea_),
     triFace_(ptf.triFace_),
     triToFace_(ptf.triToFace_),
     triCumulativeMagSf_(ptf.triCumulativeMagSf_),
     sumTriMagSf_(ptf.sumTriMagSf_),
-
     eddies_(ptf.eddies_),
     nCellPerEddy_(ptf.nCellPerEddy_),
     patchNormal_(ptf.patchNormal_),
     v0_(ptf.v0_),
     rndGen_(ptf.rndGen_),
-    sigmax_(ptf.sigmax_, mapper),
+    sigmax_(mapper(ptf.sigmax_)),
     maxSigmaX_(ptf.maxSigmaX_),
     nEddy_(0),
     curTimeIndex_(-1),
@@ -827,7 +821,6 @@ turbulentDFSEMInletFvPatchVectorField
     delta_(readScalar(dict.lookup("delta"))),
     d_(dict.lookupOrDefault<scalar>("d", 1)),
     kappa_(dict.lookupOrDefault<scalar>("kappa", 0.41)),
-
     perturb_(dict.lookupOrDefault<scalar>("perturb", 1e-5)),
     mapMethod_(dict.lookup("mapMethod")),
     mapperPtr_(nullptr),
@@ -838,18 +831,16 @@ turbulentDFSEMInletFvPatchVectorField
     interpolateU_(false),
     U_(interpolateOrRead<vector>("U", dict, interpolateU_)),
     UMean_(vector::zero),
-
     patchArea_(-1),
     triFace_(),
     triToFace_(),
     triCumulativeMagSf_(),
     sumTriMagSf_(Pstream::nProcs() + 1, 0.0),
-
     eddies_(),
     nCellPerEddy_(dict.lookupOrDefault<label>("nCellPerEddy", 5)),
     patchNormal_(vector::zero),
     v0_(0),
-    rndGen_(0, -1),
+    rndGen_(123456),
     sigmax_(size(), 0),
     maxSigmaX_(0),
     nEddy_(0),
@@ -969,12 +960,17 @@ void Foam::turbulentDFSEMInletFvPatchVectorField::autoMap
     fixedValueFvPatchField<vector>::autoMap(m);
 
     // Clear interpolator
-    mapperPtr_.clear();
-    R_.autoMap(m);
-    L_.autoMap(m);
-    U_.autoMap(m);
-
-    sigmax_.autoMap(m);
+    //mapperPtr_.clear();
+    //R_.autoMap(m);
+    //L_.autoMap(m);
+    //U_.autoMap(m);
+    //
+    //sigmax_.autoMap(m);
+    m(R_, R_);
+    m(L_, L_);
+    m(U_, U_);
+    
+    m(sigmax_, sigmax_);
 }
 
 
@@ -1115,35 +1111,34 @@ void Foam::turbulentDFSEMInletFvPatchVectorField::updateCoeffs()
 void Foam::turbulentDFSEMInletFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchField<vector>::write(os);
-    //writeEntry("value", os);
-    this->writeEntry("value", os);
-    //os.writeEntry("delta", delta_);
-    delta_.writeEntry("delta", os);
-    os.writeEntryIfDifferent<scalar>("d", 1.0, d_);
-    os.writeEntryIfDifferent<scalar>("kappa", 0.41, kappa_);
-    os.writeEntryIfDifferent<scalar>("perturb", 1e-5, perturb_);
-    os.writeEntryIfDifferent<label>("nCellPerEddy", 5, nCellPerEddy_);
-    os.writeEntryIfDifferent("writeEddies", false, writeEddies_);
+    writeEntry(os, "value", *this);
+    writeEntry(os, "delta", delta_);
+    writeEntryIfDifferent<scalar>(os, "d", 1.0, d_);
+    writeEntryIfDifferent<scalar>(os, "kappa", 0.41, kappa_);
+    writeEntryIfDifferent<scalar>(os, "perturb", 1e-5, perturb_);
+    writeEntryIfDifferent<label>(os, "nCellPerEddy", 5, nCellPerEddy_);
+    writeEntryIfDifferent(os, "writeEddies", false, writeEddies_);
 
     if (!interpolateR_)
     {
-        R_.writeEntry("R", os);
+        writeEntry(os, "R", R_);
     }
 
     if (!interpolateL_)
     {
-        L_.writeEntry("L", os);
+        writeEntry(os, "L", L_);
     }
 
     if (!interpolateU_)
     {
-        U_.writeEntry("U", os);
+        writeEntry(os, "U", U_);
     }
 
     if (!mapMethod_.empty())
     {
-        os.writeEntryIfDifferent<word>
+        writeEntryIfDifferent<word>
         (
+            os,
             "mapMethod",
             "planarInterpolation",
             mapMethod_

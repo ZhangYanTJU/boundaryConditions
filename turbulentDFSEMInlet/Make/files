@@ -1,6 +1,6 @@
 turbulentDFSEMInletFvPatchVectorField.C
-eddy.C
-eddyIO.C
+eddy/eddy.C
+eddy/eddyIO.C
 
 
 LIB = $(FOAM_USER_LIBBIN)/libZYturbulentDFSEMInlet

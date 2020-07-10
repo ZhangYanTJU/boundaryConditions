@@ -58,7 +58,6 @@ SourceFiles
 #ifndef decayingTurbulenceFvPatchVectorField_H
 #define decayingTurbulenceFvPatchVectorField_H
 
-#include "Random.H"
 #include "fixedValueFvPatchFields.H"
 #include "SLList.H"
 #include "pointToPointPlanarInterpolation.H"
