@@ -1,4 +1,4 @@
-alphatHanReitzWallFunctionFvPatchScalarField.C
+alphatHanReitzWallFunction.C
 
 
 LIB = $(FOAM_USER_LIBBIN)/libZYalphatHanReitzWallFunction

@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::compressible::alphatWallFunctionFvPatchScalarField
+    Foam::compressible::alphatHanReitzWallFunction
 
 Description
     This boundary condition provides a turbulent thermal diffusivity condition
@@ -65,12 +65,12 @@ See also
     Foam::fixedValueFvPatchField
 
 SourceFiles
-    alphatWallFunctionFvPatchScalarField.C
+    alphatHanReitzWallFunction.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef alphatWallFunctionFvPatchScalarField_H
-#define alphatWallFunctionFvPatchScalarField_H
+#ifndef alphatHanReitzWallFunction_H
+#define alphatHanReitzWallFunction_H
 
 #include "fixedValueFvPatchFields.H"
 
@@ -82,10 +82,10 @@ namespace compressible
 {
 
 /*---------------------------------------------------------------------------*\
-            Class alphatWallFunctionFvPatchScalarField Declaration
+            Class alphatHanReitzWallFunction Declaration
 \*---------------------------------------------------------------------------*/
 
-class alphatWallFunctionFvPatchScalarField
+class alphatHanReitzWallFunction
 :
     public fixedValueFvPatchScalarField
 {
@@ -98,20 +98,20 @@ class alphatWallFunctionFvPatchScalarField
 public:
 
     //- Runtime type information
-    TypeName("compressible::alphatWallFunction");
+    TypeName("compressible::alphatHanReitzWallFunction");
 
 
     // Constructors
 
         //- Construct from patch and internal field
-        alphatWallFunctionFvPatchScalarField
+        alphatHanReitzWallFunction
         (
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
-        alphatWallFunctionFvPatchScalarField
+        alphatHanReitzWallFunction
         (
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&,
@@ -119,20 +119,20 @@ public:
         );
 
         //- Construct by mapping given
-        //  alphatWallFunctionFvPatchScalarField
+        //  alphatHanReitzWallFunction
         //  onto a new patch
-        alphatWallFunctionFvPatchScalarField
+        alphatHanReitzWallFunction
         (
-            const alphatWallFunctionFvPatchScalarField&,
+            const alphatHanReitzWallFunction&,
             const fvPatch&,
             const DimensionedField<scalar, volMesh>&,
             const fvPatchFieldMapper&
         );
 
         //- Copy constructor
-        alphatWallFunctionFvPatchScalarField
+        alphatHanReitzWallFunction
         (
-            const alphatWallFunctionFvPatchScalarField&
+            const alphatHanReitzWallFunction&
         );
 
         //- Construct and return a clone
@@ -140,14 +140,14 @@ public:
         {
             return tmp<fvPatchScalarField>
             (
-                new alphatWallFunctionFvPatchScalarField(*this)
+                new alphatHanReitzWallFunction(*this)
             );
         }
 
         //- Copy constructor setting internal field reference
-        alphatWallFunctionFvPatchScalarField
+        alphatHanReitzWallFunction
         (
-            const alphatWallFunctionFvPatchScalarField&,
+            const alphatHanReitzWallFunction&,
             const DimensionedField<scalar, volMesh>&
         );
 
@@ -159,7 +159,7 @@ public:
         {
             return tmp<fvPatchScalarField>
             (
-                new alphatWallFunctionFvPatchScalarField(*this, iF)
+                new alphatHanReitzWallFunction(*this, iF)
             );
         }
 

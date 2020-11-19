@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "alphatWallFunctionFvPatchScalarField.H"
+#include "alphatHanReitzWallFunction.H"
 #include "compressibleTurbulenceModel.H"
 #include "nutWallFunctionFvPatchScalarField.H"
 #include "fvPatchFieldMapper.H"
@@ -39,7 +39,7 @@ namespace compressible
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
+alphatHanReitzWallFunction::alphatHanReitzWallFunction
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF
@@ -50,9 +50,9 @@ alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
 {}
 
 
-alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
+alphatHanReitzWallFunction::alphatHanReitzWallFunction
 (
-    const alphatWallFunctionFvPatchScalarField& ptf,
+    const alphatHanReitzWallFunction& ptf,
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
@@ -63,7 +63,7 @@ alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
 {}
 
 
-alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
+alphatHanReitzWallFunction::alphatHanReitzWallFunction
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
@@ -75,9 +75,9 @@ alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
 {}
 
 
-alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
+alphatHanReitzWallFunction::alphatHanReitzWallFunction
 (
-    const alphatWallFunctionFvPatchScalarField& awfpsf
+    const alphatHanReitzWallFunction& awfpsf
 )
 :
     fixedValueFvPatchScalarField(awfpsf),
@@ -85,9 +85,9 @@ alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
 {}
 
 
-alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
+alphatHanReitzWallFunction::alphatHanReitzWallFunction
 (
-    const alphatWallFunctionFvPatchScalarField& awfpsf,
+    const alphatHanReitzWallFunction& awfpsf,
     const DimensionedField<scalar, volMesh>& iF
 )
 :
@@ -98,7 +98,7 @@ alphatWallFunctionFvPatchScalarField::alphatWallFunctionFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void alphatWallFunctionFvPatchScalarField::updateCoeffs()
+void alphatHanReitzWallFunction::updateCoeffs()
 {
     if (updated())
     {
@@ -163,7 +163,7 @@ void alphatWallFunctionFvPatchScalarField::updateCoeffs()
 }
 
 
-void alphatWallFunctionFvPatchScalarField::write(Ostream& os) const
+void alphatHanReitzWallFunction::write(Ostream& os) const
 {
     fvPatchField<scalar>::write(os);
     writeEntry(os, "Prt", Prt_);
@@ -176,7 +176,7 @@ void alphatWallFunctionFvPatchScalarField::write(Ostream& os) const
 makePatchTypeField
 (
     fvPatchScalarField,
-    alphatWallFunctionFvPatchScalarField
+    alphatHanReitzWallFunction
 );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
