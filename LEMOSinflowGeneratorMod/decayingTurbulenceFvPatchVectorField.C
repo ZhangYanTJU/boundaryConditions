@@ -332,6 +332,7 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     width_(ptf.width_),
     midRadius_(ptf.midRadius_),
     center_(ptf.center_),
+    Radius_(ptf.Radius_),
     n_(ptf.n_)
 {
 }
@@ -359,6 +360,7 @@ Foam::decayingTurbulenceFvPatchVectorField::decayingTurbulenceFvPatchVectorField
     width_(ptf.width_),
     midRadius_(ptf.midRadius_),
     center_(ptf.center_),
+    Radius_(ptf.Radius_),
     n_(ptf.n_)
 {
 }
